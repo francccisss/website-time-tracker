@@ -4,49 +4,52 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 
 chrome.runtime.onMessage.addListener(
 	async ({ track }, sender, sendResponse) => {
-		const storage = await chrome.storage.local.get(["trackedSites"]);
+		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 		const [{ url, title }] = await chrome.tabs.query({
 			active: true,
 			lastFocusedWindow: true,
 		});
 
 		console.log(url);
-		const currentActiveTab = storage.trackedSites.find(
+		const currentActiveTab = trackedSites.find(
 			(site) => site.url === new URL(url).hostname
 		);
 
-		// only checking the length but not checking if the current active tab exists
-		if (track && currentActiveTab !== undefined) {
-			console.log(currentActiveTab);
-			const updateCurrentTab = {
-				...currentActiveTab,
-				isTracked: currentActiveTab.isTracked ? false : true,
-				timesVisited: currentActiveTab.timesVisited + 1,
-				time: {
-					...currentActiveTab.time,
-					currentTrackedTime: new Date(),
-				},
-			};
-			const filterSites = storage.trackedSites.filter(
-				(s) => s.url !== currentActiveTab.url
-			);
-			await chrome.storage.local.set({
-				trackedSites: [updateCurrentTab, ...filterSites],
-			});
-		} else if (track && currentActiveTab === undefined) {
-			const createCurrentTabData = {
-				url: new URL(url).hostname,
-				title,
-				isTracked: true,
-				timesVisited: 1,
-				time: {
-					initialTrackedTime: new Date(),
-					currentTrackedTime: new Date(),
-				},
-			};
-			await chrome.storage.local.set({
-				trackedSites: [createCurrentTabData, ...storage.trackedSites],
-			});
+		if (track) {
+			if (currentActiveTab !== undefined) {
+				const updateTrackedSites = trackedSites.map((site) => {
+					if (site.url.includes(currentActiveTab.url)) {
+						const updateCurrentTab = {
+							...site,
+							isTracked: site.isTracked ? false : true,
+							timesVisited: site.timesVisited + 1,
+							time: {
+								...site.time,
+								currentTrackedTime: new Date(),
+							},
+						};
+						return updateCurrentTab;
+					}
+					return site;
+				});
+				await chrome.storage.local.set({
+					trackedSites: updateTrackedSites,
+				});
+			} else if (currentActiveTab === undefined) {
+				const createCurrentTabData = {
+					url: new URL(url).hostname,
+					title,
+					isTracked: true,
+					timesVisited: 1,
+					time: {
+						initialTrackedTime: new Date(),
+						currentTrackedTime: new Date(),
+					},
+				};
+				await chrome.storage.local.set({
+					trackedSites: [createCurrentTabData, ...trackedSites],
+				});
+			}
 		}
 	}
 );
@@ -62,9 +65,7 @@ chrome.storage.onChanged.addListener(async () => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 	if (changeInfo.status === "complete") {
-		console.log(new URL(tab.url).hostname);
 		console.log("completed");
-
 		const currentActiveTab = trackedSites.find((site) =>
 			site.url.includes(new URL(tab.url).hostname)
 		);
@@ -90,12 +91,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 			await chrome.storage.local.set({
 				trackedSites: updateTrackedSites,
 			});
-		} else {
-			console.log("doesnt exist");
 		}
 	}
 });
 
-chrome.tabs.onRemoved.addListener((tabIda, removeInfo) => {
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	console.log("tab removed");
 });

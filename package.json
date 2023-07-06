@@ -1,0 +1,19 @@
+{
+	"name": "website-time-tracker",
+	"version": "1.0.0",
+	"description": "Building chrome extension that tracks how long you've visited a site and how many times you've visited a site.",
+	"private": "true",
+	"repository": {
+		"url": "https://github.com/Sty6x/website-time-tracker"
+	},
+	"keywords": [
+		"chrome",
+		"chrome-extensions",
+		"extensions"
+	],
+	"author": "FDiaz",
+	"license": "ISC",
+	"dependencies": {
+		"date-fns": "^2.30.0"
+	}
+}
