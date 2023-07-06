@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener(
 
 		console.log(url);
 		const currentActiveTab = storage.trackedSites.find(
-			(site) => site.url === new URL(url).origin
+			(site) => site.url === new URL(url).hostname
 		);
 
 		// only checking the length but not checking if the current active tab exists
@@ -35,7 +35,7 @@ chrome.runtime.onMessage.addListener(
 			});
 		} else if (track && currentActiveTab === undefined) {
 			const createCurrentTabData = {
-				url: new URL(url).origin,
+				url: new URL(url).hostname,
 				title,
 				isTracked: true,
 				timesVisited: 1,
@@ -57,4 +57,29 @@ chrome.storage.onChanged.addListener(async () => {
 		.then((result) => {
 			console.log(result.trackedSites);
 		});
+});
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+	if (changeInfo.status === "complete") {
+		console.log(tab.url);
+		console.log("completed");
+		const currentActiveTab = trackedSites.find((site) =>
+			site.url.includes(new URL(tab.url).hostname)
+		);
+		if (currentActiveTab !== undefined) {
+			console.log(currentActiveTab);
+			if (currentActiveTab.isTracked) {
+				console.log("is tracked");
+			} else {
+				console.log("is not being tracked");
+			}
+		} else {
+			console.log("doesnt exist");
+		}
+	}
+});
+
+chrome.tabs.onRemoved.addListener((tabIda, removeInfo) => {
+	console.log("tab removed");
 });
