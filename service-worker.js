@@ -62,18 +62,34 @@ chrome.storage.onChanged.addListener(async () => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 	if (changeInfo.status === "complete") {
-		console.log(tab.url);
+		console.log(new URL(tab.url).hostname);
 		console.log("completed");
+
 		const currentActiveTab = trackedSites.find((site) =>
 			site.url.includes(new URL(tab.url).hostname)
 		);
 		if (currentActiveTab !== undefined) {
-			console.log(currentActiveTab);
-			if (currentActiveTab.isTracked) {
-				console.log("is tracked");
-			} else {
-				console.log("is not being tracked");
-			}
+			const updateTrackedSites = trackedSites.map((site) => {
+				if (
+					site.url.includes(currentActiveTab.url) &&
+					currentActiveTab.isTracked
+				) {
+					const updateCurrentTab = {
+						...site,
+						timesVisited: site.timesVisited + 1,
+						time: {
+							...site.time,
+							currentTrackedTime: new Date(),
+						},
+					};
+					return updateCurrentTab;
+				} else {
+					return site;
+				}
+			});
+			await chrome.storage.local.set({
+				trackedSites: updateTrackedSites,
+			});
 		} else {
 			console.log("doesnt exist");
 		}
