@@ -15,6 +15,7 @@ chrome.runtime.onMessage.addListener(
 		const currentActiveTab = trackedSites.find(
 			(site) => site.url === new URL(url).hostname
 		);
+		const currentTime = Date.now();
 
 		if (track) {
 			if (currentActiveTab !== undefined) {
@@ -26,7 +27,7 @@ chrome.runtime.onMessage.addListener(
 							timesVisited: site.timesVisited + 1,
 							time: {
 								...site.time,
-								currentTrackedTime: latestTab[0].lastVisitTime,
+								currentTrackedTime: currentTime,
 							},
 						};
 						return updateCurrentTab;
@@ -43,8 +44,8 @@ chrome.runtime.onMessage.addListener(
 					isTracked: true,
 					timesVisited: 1,
 					time: {
-						initialTrackedTime: latestTab[0].lastVisitTime,
-						currentTrackedTime: latestTab[0].lastVisitTime,
+						initialTrackedTime: currentTime,
+						currentTrackedTime: currentTime,
 					},
 				};
 				await chrome.storage.local.set({
@@ -69,6 +70,7 @@ chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
 		site.url.includes(new URL(url).hostname)
 	);
 	console.log(currentActiveTab);
+	const currentTime = Date.now();
 	if (currentActiveTab !== undefined) {
 		const { visitTime } = await chrome.history.getVisits({ url });
 		const updateTrackedSites = trackedSites.map((site) => {
@@ -81,7 +83,7 @@ chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
 					timesVisited: site.timesVisited + 1,
 					time: {
 						...site.time,
-						currentTrackedTime: lastVisitTime,
+						currentTrackedTime: currentTime,
 					},
 				};
 				return updateCurrentTab;
