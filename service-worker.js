@@ -4,31 +4,19 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 
 chrome.runtime.onMessage.addListener(
 	async ({ track }, sender, sendResponse) => {
-		// on click event of popup track button
-		// send message to service worker to track the current site,
-		// and check if the current site exists on our trackedSites[]
-		// and if so set its property isTracked to true,
-		// update its time property currentTrackedTime to new Date()
-		// and update the timesVisited + 1
-
-		// but if the track button is clicked and the current site,
-		// does not exist in our local storage then
-		// create the data for the new tracked site and store it to our
-		// local storage, while setting the isTracked to true .
 		const storage = await chrome.storage.local.get(["trackedSites"]);
 		const [{ url, title }] = await chrome.tabs.query({
 			active: true,
 			lastFocusedWindow: true,
 		});
 
-		// returns the current active tab that exists on our DB
-		// checking the current tab already
+		console.log(url);
 		const currentActiveTab = storage.trackedSites.find(
 			(site) => site.url === new URL(url).origin
 		);
-		console.log(currentActiveTab);
 
-		if (track && storage.trackedSites.length > 0) {
+		// only checking the length but not checking if the current active tab exists
+		if (track && currentActiveTab !== undefined) {
 			console.log(currentActiveTab);
 			const updateCurrentTab = {
 				...currentActiveTab,
@@ -45,7 +33,7 @@ chrome.runtime.onMessage.addListener(
 			await chrome.storage.local.set({
 				trackedSites: [updateCurrentTab, ...filterSites],
 			});
-		} else if (track && storage.trackedSites.length === 0) {
+		} else if (track && currentActiveTab === undefined) {
 			const createCurrentTabData = {
 				url: new URL(url).origin,
 				title,
