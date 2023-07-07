@@ -69,10 +69,8 @@ chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
 	const currentActiveTab = trackedSites.find((site) =>
 		site.url.includes(new URL(url).hostname)
 	);
-	console.log(currentActiveTab);
 	const currentTime = Date.now();
 	if (currentActiveTab !== undefined) {
-		const { visitTime } = await chrome.history.getVisits({ url });
 		const updateTrackedSites = trackedSites.map((site) => {
 			if (
 				site.url.includes(currentActiveTab.url) &&
