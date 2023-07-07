@@ -4,20 +4,19 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 
 chrome.runtime.onMessage.addListener(
 	async ({ track }, sender, sendResponse) => {
-		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-		const [{ url, title }] = await chrome.tabs.query({
-			active: true,
-			lastFocusedWindow: true,
-		});
-		const latestTab = await chrome.history.search({ text: "" });
-		const { visitTime } = await chrome.history.getVisits({ url });
-
-		const currentActiveTab = trackedSites.find(
-			(site) => site.url === new URL(url).hostname
-		);
-		const currentTime = Date.now();
-
 		if (track) {
+			const { trackedSites } = await chrome.storage.local.get([
+				"trackedSites",
+			]);
+			const [{ url, title }] = await chrome.tabs.query({
+				active: true,
+				lastFocusedWindow: true,
+			});
+
+			const currentActiveTab = trackedSites.find(
+				(site) => site.url === new URL(url).hostname
+			);
+			const currentTime = Date.now();
 			if (currentActiveTab !== undefined) {
 				const updateTrackedSites = trackedSites.map((site) => {
 					if (site.url.includes(currentActiveTab.url)) {
@@ -52,6 +51,7 @@ chrome.runtime.onMessage.addListener(
 					trackedSites: [createCurrentTabData, ...trackedSites],
 				});
 			}
+		} else {
 		}
 	}
 );
@@ -65,6 +65,7 @@ chrome.storage.onChanged.addListener(async () => {
 });
 
 chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
+	console.log("history");
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 	const currentActiveTab = trackedSites.find((site) =>
 		site.url.includes(new URL(url).hostname)
@@ -95,6 +96,14 @@ chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
 	}
 });
 
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+	console.log(tabId);
+	// const current = await chrome.tabs.query(
+	// 	{ lastFocusedWindow: true },
+	// 	(tabs) => {
+	// 		console.log(tabs);
+	// 		chrome.runtime.sendMessage({ status: "removedTab", id: tabId });
+	// 	}
+	// );
 	console.log("tab removed");
 });
