@@ -202,7 +202,7 @@ body {
   /* dont use before instead p (content text) > span (extra thingy) */
   & > div::before {
     position: absolute;
-    position: inline-block;
+    display: inline-block;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -229,10 +229,48 @@ body {
 }
 
 #slide-btn {
+  position: relative;
+  display: inline-block;
   height: 20px;
   width: 20%;
   border-radius: 22.5px;
-  box-shadow: inset 0px 0px 5px 1px #40404060;
+  box-shadow: inset 0px 0px 5px 1px #40404040;
   appearance: none;
   border: none;
+  padding: 0;
+  &.isTracked {
+    background-color: #a6ffa6;
+  }
+  &.isNotTracked::before,
+  &.isTracked::before {
+    box-shadow: inset 0px 0px 2px 1px #00000020;
+  }
+
+  &.isTracked::before {
+    box-sizing: border-box;
+    display: inline-block;
+    position: absolute;
+    background: #ffffff;
+    content: "";
+    border-radius: 50%;
+    width: calc(80% - 50%);
+    height: 80%;
+    left: 65%;
+    top: 50%;
+    transform: translate(0%, -50%);
+  }
+
+  &.isNotTracked::before {
+    box-sizing: border-box;
+    display: inline-block;
+    position: absolute;
+    background: #ffffff;
+    content: "";
+    border-radius: 50%;
+    width: calc(80% - 50%);
+    height: 80%;
+    left: 4%;
+    top: 50%;
+    transform: translate(0%, -50%);
+  }
 }
