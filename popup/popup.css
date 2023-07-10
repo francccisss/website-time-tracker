@@ -123,11 +123,53 @@ table {
   border-spacing: 0;
 }
 
+@font-face {
+  font-family: "inter";
+  src: url("../src/assets/fonts/Inter-Light.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("./assets/fonts/Inter-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("./assets/fonts/Inter-Medium.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("./assets/fonts/Inter-SemiBold.woff2") format("woff2");
+  font-style: nomal;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("./assets/fonts/Inter-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("./assets/fonts/Inter-ExtraBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 800;
+}
+
 body {
   max-width: 400px;
-  /* height: 200px; */
   margin: 0;
   background-color: #ffffff;
+  font-family: inter;
 }
 
 #title-container {
