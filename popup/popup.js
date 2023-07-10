@@ -7,22 +7,20 @@ async function displayCurrentTab() {
     active: true,
     lastFocusedWindow: true,
   });
-  console.log(url);
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   const currentActiveTab = trackedSites.find(
     (site) => site.url === new URL(url).hostname
   );
-  if (currentActiveTab !== undefined) {
-    if (currentActiveTab.isTracked) {
-      console.log(currentActiveTab);
-    } else {
-      console.log(currentActiveTab);
-    }
+  if (currentActiveTab !== undefined && currentActiveTab.isTracked) {
+    slideBtn.classList.replace("isNotTracked", "isTracked");
+    console.log(currentActiveTab);
+  } else if (currentActiveTab === undefined || !currentActiveTab.isTracked) {
+    // if is not in the list of tracked sites and is not tracked
+    // dont show data
+    // set button to isNotTracked
+    // set the url to popup title and set logo
+    console.log(url, ": is not tracked and is not stored in db");
   }
-  // if is not in the list of tracked sites and is not tracked
-  // dont show data
-  // set button to isNotTracked
-  // set the url to popup title and set logo
 }
 
 function animateSlideButton(e) {
