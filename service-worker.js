@@ -62,7 +62,7 @@ chrome.storage.onChanged.addListener(async () => {
     });
 });
 
-chrome.history.onVisited.addListener(async ({ url, lastVisitTime }) => {
+chrome.history.onVisited.addListener(async ({ url }) => {
   console.log("history");
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   const currentActiveTab = trackedSites.find((site) =>
