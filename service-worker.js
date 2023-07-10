@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener(
   async ({ track }, sender, sendResponse) => {
     if (track) {
       const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-      const [{ url, title }] = await chrome.tabs.query({
+      const [{ url, title, favIconUrl }] = await chrome.tabs.query({
         active: true,
         lastFocusedWindow: true,
       });
@@ -38,6 +38,7 @@ chrome.runtime.onMessage.addListener(
         const createCurrentTabData = {
           url: new URL(url).hostname,
           title,
+          favIconUrl,
           isTracked: true,
           timesVisited: 1,
           time: {
@@ -55,15 +56,12 @@ chrome.runtime.onMessage.addListener(
 );
 
 chrome.storage.onChanged.addListener(async () => {
-  const getStorage = await chrome.storage.local
-    .get(["trackedSites"])
-    .then((result) => {
-      console.log(result.trackedSites);
-    });
+  await chrome.storage.local.get(["trackedSites"]).then((result) => {
+    console.log(result.trackedSites);
+  });
 });
 
 chrome.history.onVisited.addListener(async ({ url }) => {
-  console.log("history");
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   const currentActiveTab = trackedSites.find((site) =>
     site.url.includes(new URL(url).hostname)

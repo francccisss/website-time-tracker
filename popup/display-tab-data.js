@@ -9,14 +9,13 @@ export async function displayCurrentTab() {
     (site) => site.url === new URL(url).hostname
   );
   const header = document.getElementById("website-title");
-  let metrics = document.querySelectorAll(".metric-data");
+  const metrics = document.querySelectorAll(".metric-data");
   let headerText = new URL(url).host.split(".")[1];
   let formatHeaderText = headerText.replace(
     headerText[0],
     headerText.charAt(0).toUpperCase()
   );
   header.textContent = formatHeaderText;
-  console.log(url);
 
   if (currentActiveTab !== undefined) {
     console.log(currentActiveTab);
