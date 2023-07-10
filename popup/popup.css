@@ -191,23 +191,32 @@ body {
   justify-content: space-between;
   gap: 1em;
   align-items: center;
+  & > li {
+    align-self: start;
+    list-style: none;
+    display: inline-block;
+  }
+}
+
+.time-wasted {
   & > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
     width: 75px;
     height: 75px;
     background-color: #ffffff;
     border: 10px solid #e8e8e8;
     border-radius: 50%;
-    position: relative;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5em;
   }
-  /* dont use before instead p (content text) > span (extra thingy) */
-  & > div::before {
-    position: absolute;
-    display: inline-block;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    content: "20hr";
-    font-size: 1rem;
+  & > p {
+    box-sizing: content-box;
+    font-size: 0.8rem;
+    text-align: center;
   }
 }
 
@@ -216,7 +225,7 @@ body {
   height: 100%;
   flex-direction: column;
   padding: 15px 30px;
-  gap: 15px;
+  gap: 10px;
 }
 
 #track-slide-btn-container {
@@ -229,6 +238,7 @@ body {
 }
 
 #slide-btn {
+  cursor: pointer;
   position: relative;
   display: inline-block;
   height: 20px;

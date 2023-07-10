@@ -11,9 +11,11 @@ async function displayCurrentTab() {
   const currentActiveTab = trackedSites.find(
     (site) => site.url === new URL(url).hostname
   );
+
   const header = document.getElementById("website-title");
-  const { title } = applyTabData({ header });
+  const { title } = applyTabData({ header: url });
   header.textContent = title;
+
   if (currentActiveTab !== undefined && currentActiveTab.isTracked) {
     slideBtn.classList.replace("isNotTracked", "isTracked");
     console.log(currentActiveTab);
@@ -27,7 +29,7 @@ async function displayCurrentTab() {
 }
 
 function applyTabData({ header }) {
-  let headerText = new URL(url).host.split(".")[1];
+  let headerText = new URL(header).host.split(".")[1];
   let formatHeaderText = headerText.replace(
     headerText[0],
     headerText.charAt(0).toUpperCase()
