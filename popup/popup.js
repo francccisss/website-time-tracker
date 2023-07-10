@@ -12,15 +12,10 @@ async function displayCurrentTab() {
     (site) => site.url === new URL(url).hostname
   );
   const header = document.getElementById("website-title");
-  let headerText = new URL(url).host.split(".")[1];
-  let formatHeaderText = headerText.replace(
-    headerText[0],
-    headerText.charAt(0).toUpperCase()
-  );
-  header.textContent = formatHeaderText;
+  const { title } = applyTabData({ header });
+  header.textContent = title;
   if (currentActiveTab !== undefined && currentActiveTab.isTracked) {
     slideBtn.classList.replace("isNotTracked", "isTracked");
-
     console.log(currentActiveTab);
   } else if (currentActiveTab === undefined || !currentActiveTab.isTracked) {
     // if is not in the list of tracked sites and is not tracked
@@ -29,6 +24,18 @@ async function displayCurrentTab() {
     // set the url to popup title and set logo
     console.log(url, ": is not tracked and is not stored in db");
   }
+}
+
+function applyTabData({ header }) {
+  let headerText = new URL(url).host.split(".")[1];
+  let formatHeaderText = headerText.replace(
+    headerText[0],
+    headerText.charAt(0).toUpperCase()
+  );
+
+  return {
+    title: formatHeaderText,
+  };
 }
 
 function animateSlideButton(e) {
