@@ -5,9 +5,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 chrome.runtime.onMessage.addListener(
   async ({ track }, sender, sendResponse) => {
     if (track) {
-      const { trackedSites } = await chrome.storage.local.get([
-        "trackedSites",
-      ]);
+      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
       const [{ url, title }] = await chrome.tabs.query({
         active: true,
         lastFocusedWindow: true,
