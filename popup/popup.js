@@ -13,11 +13,19 @@ async function displayCurrentTab() {
   );
 
   const header = document.getElementById("website-title");
-  const { title } = applyTabData({ header: url });
+  let metrics = document.querySelectorAll(".metric-data");
+  const { title, data } = applyTabData({
+    header: url,
+    time: currentActiveTab.time,
+    visits: currentActiveTab.timesVisited,
+  });
   header.textContent = title;
 
   if (currentActiveTab !== undefined && currentActiveTab.isTracked) {
     slideBtn.classList.replace("isNotTracked", "isTracked");
+    metrics.forEach((metric, i) => {
+      metric.textContent = Math.floor(data[i]);
+    });
     console.log(currentActiveTab);
   } else if (currentActiveTab === undefined || !currentActiveTab.isTracked) {
     // if is not in the list of tracked sites and is not tracked
@@ -28,15 +36,28 @@ async function displayCurrentTab() {
   }
 }
 
-function applyTabData({ header }) {
+function applyTabData({
+  header,
+  time: { currentTrackedTime, initialTrackedTime },
+  visits,
+}) {
   let headerText = new URL(header).host.split(".")[1];
   let formatHeaderText = headerText.replace(
     headerText[0],
     headerText.charAt(0).toUpperCase()
   );
+  let formattedData;
+  if (header !== undefined) {
+    formattedData = [
+      (currentTrackedTime - initialTrackedTime) / 3600000,
+      visits,
+      (Date.now() - currentTrackedTime) / 3600000,
+    ];
+  }
 
   return {
     title: formatHeaderText,
+    data: formattedData,
   };
 }
 
