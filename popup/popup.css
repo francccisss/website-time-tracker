@@ -238,8 +238,11 @@ body {
   appearance: none;
   border: none;
   padding: 0;
+
+  animation: animate-button-bg reverse forwards ease-in-out 150ms;
   &.isTracked {
     background-color: #a6ffa6;
+    animation: animate-button-bg forwards 150ms ease-in-out;
   }
   &.isNotTracked::before,
   &.isTracked::before {
@@ -258,6 +261,7 @@ body {
     left: 65%;
     top: 50%;
     transform: translate(0%, -50%);
+    animation: animate-button forwards 150ms ease-in-out;
   }
 
   &.isNotTracked::before {
@@ -272,5 +276,23 @@ body {
     left: 4%;
     top: 50%;
     transform: translate(0%, -50%);
+    animation: animate-button reverse forwards ease-in-out 150ms;
+  }
+}
+
+@keyframes animate-button-bg {
+  from {
+    background-color: #ffffff;
+  }
+  to {
+    background-color: #a6ffa6;
+  }
+}
+@keyframes animate-button {
+  from {
+    left: 4%;
+  }
+  to {
+    left: 65%;
   }
 }
