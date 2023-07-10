@@ -238,7 +238,6 @@ body {
   appearance: none;
   border: none;
   padding: 0;
-
   animation: animate-button-bg reverse forwards ease-in-out 150ms;
   &.isTracked {
     background-color: #a6ffa6;
@@ -247,9 +246,6 @@ body {
   &.isNotTracked::before,
   &.isTracked::before {
     box-shadow: inset 0px 0px 2px 1px #00000020;
-  }
-
-  &.isTracked::before {
     box-sizing: border-box;
     display: inline-block;
     position: absolute;
@@ -258,24 +254,15 @@ body {
     border-radius: 50%;
     width: calc(80% - 50%);
     height: 80%;
-    left: 65%;
     top: 50%;
-    transform: translate(0%, -50%);
+    transform: translateY(-50%);
+  }
+
+  &.isTracked::before {
     animation: animate-button forwards 150ms ease-in-out;
   }
 
   &.isNotTracked::before {
-    box-sizing: border-box;
-    display: inline-block;
-    position: absolute;
-    background: #ffffff;
-    content: "";
-    border-radius: 50%;
-    width: calc(80% - 50%);
-    height: 80%;
-    left: 4%;
-    top: 50%;
-    transform: translate(0%, -50%);
     animation: animate-button reverse forwards ease-in-out 150ms;
   }
 }
