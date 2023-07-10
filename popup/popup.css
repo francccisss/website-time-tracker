@@ -170,6 +170,7 @@ body {
   margin: 0;
   background-color: #ffffff;
   font-family: inter;
+  color: #404040;
 }
 
 #title-container {
@@ -198,6 +199,7 @@ body {
     border-radius: 50%;
     position: relative;
   }
+  /* dont use before instead p (content text) > span (extra thingy) */
   & > div::before {
     position: absolute;
     position: inline-block;
@@ -214,4 +216,23 @@ body {
   height: 100%;
   flex-direction: column;
   padding: 15px 30px;
+  gap: 15px;
+}
+
+#track-slide-btn-container {
+  display: flex;
+  align-items: center;
+  & > label {
+    font-weight: 500;
+    margin-right: auto;
+  }
+}
+
+#slide-btn {
+  height: 20px;
+  width: 20%;
+  border-radius: 22.5px;
+  box-shadow: inset 0px 0px 5px 1px #40404060;
+  appearance: none;
+  border: none;
 }
