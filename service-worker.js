@@ -41,8 +41,8 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
         isTracked: true,
         timesVisited: 0,
         time: {
-          initialTrackedTime: currentTime,
           currentTrackedTime: currentTime,
+          totalTrackedTime: currentTime,
         },
       };
       await chrome.storage.local.set({
@@ -80,12 +80,26 @@ chrome.history.onVisited.addListener(async () => {
 // from when it was inactive and only calculates the total time after it disconnects
 // > need to only set a time if the tab is active and calculate total time on disconnect and inactive tab event
 chrome.runtime.onConnect.addListener(async (port) => {
-  console.log("onConnect event");
-  console.assert(port.name === "connect");
   console.log("connected");
-  port.onMessage.addListener((msg) => {
-    console.log(msg.greetings);
-  });
+  let trackedTabUrl;
+  if (port.name === "connect") {
+    port.onMessage.addListener((msg, { url }) => {
+      console.log(msg.greetings);
+      trackedTabUrl = url;
+    });
+    port.onDisconnect.addListener(async () => {
+      console.log("disconnected");
+      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+      const currentActiveTab = trackedSites.find((site) =>
+        site.url.includes(new URL(trackedTabUrl).hostname)
+      );
+      if (currentActiveTab !== undefined) {
+        console.log(currentActiveTab);
+      } else {
+        console.log("is not in database");
+      }
+    });
+  }
 });
 
 chrome.history.onVisited.addListener(async ({ url }) => {
@@ -119,6 +133,6 @@ chrome.history.onVisited.addListener(async ({ url }) => {
   }
 });
 
-chrome.tabs.onRemoved.addListener(async (tabId) => {
+chrome.tabs.onRemoved.addListener(async () => {
   console.log("tab removed");
 });
