@@ -80,11 +80,10 @@ chrome.history.onVisited.addListener(async () => {
 //
 // This event is getting called twice
 chrome.runtime.onConnect.addListener(async (port) => {
-  console.log("connected");
-  let trackedTabUrl;
   if (port.name === "connect") {
+    let trackedTabUrl;
     port.onMessage.addListener((msg, { sender }) => {
-      console.log(msg.greetings);
+      console.log(msg);
       trackedTabUrl = sender.url;
     });
     port.onDisconnect.addListener(async () => {

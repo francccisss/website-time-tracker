@@ -2,5 +2,5 @@
   console.log("called");
   console.log("port");
   const port = chrome.runtime.connect({ name: "connect" });
-  port.postMessage({ greetings: "Hello" });
+  port.postMessage("connected");
 })();
