@@ -2,58 +2,55 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
   reason === "install" && chrome.storage.local.set({ trackedSites: [] });
 });
 
-chrome.runtime.onMessage.addListener(
-  async ({ track }, sender, sendResponse) => {
-    if (track) {
-      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-      const [{ url, title, favIconUrl }] = await chrome.tabs.query({
-        active: true,
-        lastFocusedWindow: true,
-      });
+chrome.runtime.onMessage.addListener(async ({ track }) => {
+  if (track) {
+    const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+    const [{ url, title, favIconUrl }] = await chrome.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    });
 
-      const currentActiveTab = trackedSites.find(
-        (site) => site.url === new URL(url).hostname
-      );
-      const currentTime = Date.now();
-      if (currentActiveTab !== undefined) {
-        const updateTrackedSites = trackedSites.map((site) => {
-          if (site.url.includes(currentActiveTab.url)) {
-            const updateCurrentTab = {
-              ...site,
-              isTracked: site.isTracked ? false : true,
-              timesVisited: site.timesVisited + 1,
-              time: {
-                ...site.time,
-                currentTrackedTime: currentTime,
-              },
-            };
-            return updateCurrentTab;
-          }
-          return site;
-        });
-        await chrome.storage.local.set({
-          trackedSites: updateTrackedSites,
-        });
-      } else if (currentActiveTab === undefined) {
-        const createCurrentTabData = {
-          url: new URL(url).hostname,
-          title,
-          favIconUrl,
-          isTracked: true,
-          timesVisited: 1,
-          time: {
-            initialTrackedTime: currentTime,
-            currentTrackedTime: currentTime,
-          },
-        };
-        await chrome.storage.local.set({
-          trackedSites: [createCurrentTabData, ...trackedSites],
-        });
-      }
-    } else {
+    const currentActiveTab = trackedSites.find(
+      (site) => site.url === new URL(url).hostname
+    );
+    const currentTime = Date.now();
+    if (currentActiveTab !== undefined) {
+      const updateTrackedSites = trackedSites.map((site) => {
+        if (site.url.includes(currentActiveTab.url)) {
+          const updateCurrentTab = {
+            ...site,
+            isTracked: site.isTracked ? false : true,
+            timesVisited: site.timesVisited + 1,
+            time: {
+              ...site.time,
+              currentTrackedTime: currentTime,
+            },
+          };
+          return updateCurrentTab;
+        }
+        return site;
+      });
+      await chrome.storage.local.set({
+        trackedSites: updateTrackedSites,
+      });
+    } else if (currentActiveTab === undefined) {
+      const createCurrentTabData = {
+        url: new URL(url).hostname,
+        title,
+        favIconUrl,
+        isTracked: true,
+        timesVisited: 1,
+        time: {
+          initialTrackedTime: currentTime,
+          currentTrackedTime: currentTime,
+        },
+      };
+      await chrome.storage.local.set({
+        trackedSites: [createCurrentTabData, ...trackedSites],
+      });
     }
   }
-);
+});
 
 chrome.storage.onChanged.addListener(async () => {
   await chrome.storage.local.get(["trackedSites"]).then((result) => {
