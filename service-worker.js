@@ -1,19 +1,16 @@
+import { getCurrentActiveTab } from "./utils/service-worker.utils.js";
+
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   reason === "install" && chrome.storage.local.set({ trackedSites: [] });
 });
 
 chrome.runtime.onMessage.addListener(async ({ track }) => {
   if (track) {
-    const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
     const [{ url, title, favIconUrl }] = await chrome.tabs.query({
       active: true,
       lastFocusedWindow: true,
     });
-
-    const currentActiveTab = trackedSites.find(
-      (site) => site.url === new URL(url).hostname
-    );
-    const currentTime = Date.now();
+    const currentActiveTab = await getCurrentActiveTab(url);
     if (currentActiveTab !== undefined) {
       const updateTrackedSites = trackedSites.map((site) => {
         if (site.url.includes(currentActiveTab.url)) {
@@ -45,6 +42,7 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
           totalTrackedTime: currentTime,
         },
       };
+      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
       await chrome.storage.local.set({
         trackedSites: [createCurrentTabData, ...trackedSites],
       });
@@ -86,13 +84,11 @@ chrome.runtime.onConnect.addListener(async (port) => {
     port.onMessage.addListener((msg, { url }) => {
       console.log(msg.greetings);
       trackedTabUrl = url;
+      console.log(trackedTabUrl);
     });
     port.onDisconnect.addListener(async () => {
       console.log("disconnected");
-      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-      const currentActiveTab = trackedSites.find((site) =>
-        site.url.includes(new URL(trackedTabUrl).hostname)
-      );
+      const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
       if (currentActiveTab !== undefined) {
         console.log(currentActiveTab);
       } else {
@@ -104,9 +100,7 @@ chrome.runtime.onConnect.addListener(async (port) => {
 
 chrome.history.onVisited.addListener(async ({ url }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-  const currentActiveTab = trackedSites.find((site) =>
-    site.url.includes(new URL(url).hostname)
-  );
+  const currentActiveTab = await getCurrentActiveTab(url);
   if (currentActiveTab !== undefined) {
     const currentTime = Date.now();
     const updateTrackedSites = trackedSites.map((site) => {
