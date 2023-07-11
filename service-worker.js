@@ -76,10 +76,19 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
+// problem if a user is not active in a connected tab, the time will still be counted from the first visit and the difference
+// from when it was inactive and only calculates the total time after it disconnects
+// > need to only set a time if the tab is active and calculate total time on disconnect and inactive tab event
 chrome.runtime.onConnect.addListener(async (port) => {
+  let currentTab;
   if (port.name === "connect") {
     console.log("connected");
-    port.onDisconnect.addListener(() => {
+    port.onMessage.addListener((message) => {
+      currentTab = message;
+      console.log(currentTab);
+    });
+    port.onDisconnect.addListener(async () => {
+      // content script should send the current tab before it disconnects
       console.log("disconnected");
     });
   }
