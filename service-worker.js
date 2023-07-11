@@ -81,10 +81,8 @@ chrome.runtime.onConnect.addListener(async (port) => {
   console.log("connected");
   let trackedTabUrl;
   if (port.name === "connect") {
-    port.onMessage.addListener((msg, { url }) => {
-      console.log(msg.greetings);
-      trackedTabUrl = url;
-      console.log(trackedTabUrl);
+    port.onMessage.addListener(({ sender }) => {
+      trackedTabUrl = sender.url;
     });
     port.onDisconnect.addListener(async () => {
       console.log("disconnected");
