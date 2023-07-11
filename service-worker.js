@@ -80,13 +80,12 @@ chrome.history.onVisited.addListener(async () => {
 // from when it was inactive and only calculates the total time after it disconnects
 // > need to only set a time if the tab is active and calculate total time on disconnect and inactive tab event
 chrome.runtime.onConnect.addListener(async (port) => {
-  if (port.name === "connect") {
-    console.log("connected");
-    port.onDisconnect.addListener(async () => {
-      // content script should send the current tab before it disconnects
-      console.log("disconnected");
-    });
-  }
+  console.log("onConnect event");
+  console.assert(port.name === "connect");
+  console.log("connected");
+  port.onMessage.addListener((msg) => {
+    console.log(msg.greetings);
+  });
 });
 
 chrome.history.onVisited.addListener(async ({ url }) => {
