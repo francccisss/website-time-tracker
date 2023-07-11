@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
         title,
         favIconUrl,
         isTracked: true,
-        timesVisited: 1,
+        timesVisited: 0,
         time: {
           initialTrackedTime: currentTime,
           currentTrackedTime: currentTime,

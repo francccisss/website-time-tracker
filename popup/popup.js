@@ -1,4 +1,4 @@
-import { displayCurrentTab } from "./display-tab-data.js";
+import { displayCurrentTab, animateSlideButton } from "./popup-dom-visuals.js";
 
 const slideBtn = document.getElementById("slide-btn");
 
@@ -9,12 +9,3 @@ slideBtn.addEventListener("click", async (e) => {
   animateSlideButton(e);
   await chrome.runtime.sendMessage({ track: true });
 });
-
-function animateSlideButton(e) {
-  e.preventDefault();
-  let target = e.target;
-  if (target.classList.contains("isNotTracked")) {
-    return target.classList.replace("isNotTracked", "isTracked");
-  }
-  target.classList.replace("isTracked", "isNotTracked");
-}

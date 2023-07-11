@@ -47,3 +47,12 @@ function formatMetricData({
     data: formattedData,
   };
 }
+
+export function animateSlideButton(e) {
+  e.preventDefault();
+  let target = e.target;
+  if (target.classList.contains("isNotTracked")) {
+    return target.classList.replace("isNotTracked", "isTracked");
+  }
+  target.classList.replace("isTracked", "isNotTracked");
+}
