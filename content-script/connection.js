@@ -1,5 +1,5 @@
+console.log("called");
 (async function () {
-  console.log("called");
   // const [tab] = await chrome.tabs.query({
   //   active: true,
   //   lastFocusedWindow: true,
