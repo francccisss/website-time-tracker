@@ -38,8 +38,12 @@ function formatMetricData({
   let formattedData;
   if (visits !== undefined) {
     formattedData = [
+      // wrong everytime a user clicks on popup action it calculates the total time between initial and current time
+      // instead of accumulating every visit and exit to total time totalTime = n(fromVisitTime - onExitTime)
       (currentTrackedTime - initialTrackedTime) / 3600000,
       visits,
+      // wrong this needs the get the daily reset and accumulate the same way as from totalTime
+      // dailySpent = n(fromVisitTime - onExitTime)
       (Date.now() - currentTrackedTime) / 3600000,
     ];
   }

@@ -1,13 +1,22 @@
 {
-	"manifest_version": 3,
-	"name": "Website-tracker ",
-	"version": "1.0.1",
-	"permissions": ["tabs", "storage", "history"],
-	"action": {
-		"default_popup": "popup/index.html"
-	},
-	"background": {
-		"service_worker": "service-worker.js",
-		"type": "module"
-	}
+  "manifest_version": 3,
+  "name": "Website-tracker ",
+  "version": "1.0.1",
+  "permissions": [
+    "tabs",
+    "storage",
+    "history",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup/index.html"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  }
 }

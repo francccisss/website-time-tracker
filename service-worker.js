@@ -58,13 +58,22 @@ chrome.storage.onChanged.addListener(async () => {
   });
 });
 
-chrome.history.onVisited.addListener(async ({ url }) => {
+// to inject content script
+//
+chrome.tabs.onUpdated.addListener(async (tabId) => {
+  await chrome.scripting.executeScript({
+    target: { tabId: tabId },
+    files: ["./content-script/connection.js"],
+  });
+});
+
+chrome.history.onVisited.addListener(async ({ url, id }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   const currentActiveTab = trackedSites.find((site) =>
     site.url.includes(new URL(url).hostname)
   );
-  const currentTime = Date.now();
   if (currentActiveTab !== undefined) {
+    const currentTime = Date.now();
     const updateTrackedSites = trackedSites.map((site) => {
       if (
         site.url.includes(currentActiveTab.url) &&
@@ -87,6 +96,10 @@ chrome.history.onVisited.addListener(async ({ url }) => {
       trackedSites: updateTrackedSites,
     });
   }
+});
+
+chrome.runtime.onConnect.addListener(async (port) => {
+  console.log(port.name);
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
