@@ -58,16 +58,34 @@ chrome.storage.onChanged.addListener(async () => {
   });
 });
 
-// to inject content script
-//
-chrome.tabs.onUpdated.addListener(async (tabId) => {
-  await chrome.scripting.executeScript({
-    target: { tabId: tabId },
-    files: ["./content-script/connection.js"],
+// need to listen to different events and inject script to tabs that is currently active
+// injects on every tabs that were active and establishes a connection
+chrome.history.onVisited.addListener(async () => {
+  const [{ id }] = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
   });
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: id },
+      files: ["./content-script/connection.js"],
+    });
+    console.log("successfully injected");
+  } catch (err) {
+    console.log("unable to inject script");
+  }
 });
 
-chrome.history.onVisited.addListener(async ({ url, id }) => {
+chrome.runtime.onConnect.addListener(async (port) => {
+  if (port.name === "connect") {
+    console.log("connected");
+    port.onDisconnect.addListener(() => {
+      console.log("disconnected");
+    });
+  }
+});
+
+chrome.history.onVisited.addListener(async ({ url }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   const currentActiveTab = trackedSites.find((site) =>
     site.url.includes(new URL(url).hostname)
@@ -98,11 +116,6 @@ chrome.history.onVisited.addListener(async ({ url, id }) => {
   }
 });
 
-chrome.runtime.onConnect.addListener(async (port) => {
-  console.log(port.name);
-});
-
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  console.log(tabId);
   console.log("tab removed");
 });
