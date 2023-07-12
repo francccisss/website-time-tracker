@@ -11,6 +11,7 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
       lastFocusedWindow: true,
     });
     const currentActiveTab = await getCurrentActiveTab(url);
+    const currentTime = Date.now();
     if (currentActiveTab !== undefined) {
       const updateTrackedSites = trackedSites.map((site) => {
         if (site.url.includes(currentActiveTab.url)) {
@@ -56,8 +57,6 @@ chrome.storage.onChanged.addListener(async () => {
   });
 });
 
-// need to listen to different events and inject script to tabs that is currently active
-// injects on every tabs that were active and establishes a connection
 chrome.history.onVisited.addListener(async () => {
   const [{ id }] = await chrome.tabs.query({
     active: true,
@@ -74,11 +73,6 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
-// problem if a user is not active in a connected tab, the time will still be counted from the first visit and the difference
-// from when it was inactive and only calculates the total time after it disconnects
-// > need to only set a time if the tab is active and calculate total time on disconnect and inactive tab event
-//
-// This event is getting called twice
 chrome.runtime.onConnect.addListener(async (port) => {
   if (port.name === "connect") {
     let trackedTabUrl;
@@ -98,32 +92,39 @@ chrome.runtime.onConnect.addListener(async (port) => {
   }
 });
 
+// error if trackedsites[] is empty then this throws an error
+//check trackedSites
+// > if empty dont call getCurrentActiveTab()
+// > if not empty then proceed
 chrome.history.onVisited.addListener(async ({ url }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-  const currentActiveTab = await getCurrentActiveTab(url);
-  if (currentActiveTab !== undefined) {
-    const currentTime = Date.now();
-    const updateTrackedSites = trackedSites.map((site) => {
-      if (
-        site.url.includes(currentActiveTab.url) &&
-        currentActiveTab.isTracked
-      ) {
-        const updateCurrentTab = {
-          ...site,
-          timesVisited: site.timesVisited + 1,
-          time: {
-            ...site.time,
-            currentTrackedTime: currentTime,
-          },
-        };
-        return updateCurrentTab;
-      } else {
-        return site;
-      }
-    });
-    await chrome.storage.local.set({
-      trackedSites: updateTrackedSites,
-    });
+  if (trackedSites.length !== 0) {
+    const currentActiveTab = await getCurrentActiveTab(url);
+    if (currentActiveTab !== undefined) {
+      const currentTime = Date.now();
+      await chrome.storage.local.set({
+        trackedSites: trackedSites.map((site) => {
+          if (
+            site.url.includes(currentActiveTab.url) &&
+            currentActiveTab.isTracked
+          ) {
+            const updateCurrentTab = {
+              ...site,
+              timesVisited: site.timesVisited + 1,
+              time: {
+                ...site.time,
+                currentTrackedTime: currentTime,
+              },
+            };
+            return updateCurrentTab;
+          } else {
+            return site;
+          }
+        }),
+      });
+    }
+  } else {
+    console.log("tracked sites empty");
   }
 });
 
