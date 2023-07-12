@@ -40,7 +40,8 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
         timesVisited: 0,
         time: {
           currentTrackedTime: currentTime,
-          totalTrackedTime: currentTime,
+          totalTimeSpent: 0,
+          dailyTimeSpent: 0,
         },
       };
       const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -84,7 +85,26 @@ chrome.runtime.onConnect.addListener(async (port) => {
       console.log("disconnected");
       const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
       if (currentActiveTab !== undefined) {
-        console.log(currentActiveTab);
+        const currentTime = Date.now();
+        const { trackedSites } = await chrome.storage.local.get([
+          "trackedSites",
+        ]);
+        const updatedActiveTab = {
+          ...currentActiveTab,
+          time: {
+            ...currentActiveTab.time,
+            totalTimeSpent:
+              currentActiveTab.time.totalTimeSpent +
+              (currentTime - currentActiveTab.time.currentTrackedTime),
+            dailyTimeSpent: 20,
+          },
+        };
+        await chrome.storage.local.set({
+          trackedSites: trackedSites.map((site) =>
+            site.url === currentActiveTab.url ? updatedActiveTab : site
+          ),
+        });
+        console.log(updatedActiveTab);
       } else {
         console.log("is not in database");
       }
@@ -92,10 +112,7 @@ chrome.runtime.onConnect.addListener(async (port) => {
   }
 });
 
-// error if trackedsites[] is empty then this throws an error
-//check trackedSites
-// > if empty dont call getCurrentActiveTab()
-// > if not empty then proceed
+// improve smelly code
 chrome.history.onVisited.addListener(async ({ url }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
   if (trackedSites.length !== 0) {
