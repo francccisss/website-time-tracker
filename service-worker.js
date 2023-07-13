@@ -74,6 +74,11 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
+// every time a user opens a tab of the same url `n` times,
+// a connection is established for each tab with the same url,
+// so when a user decides to close one tab of the same url,
+// the established connection between all similar urls will
+// not be disconnected until there is none left of the same url.
 chrome.runtime.onConnect.addListener(async (port) => {
   if (port.name === "connect") {
     let trackedTabUrl;
@@ -148,3 +153,5 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 chrome.tabs.onRemoved.addListener(async () => {
   console.log("tab removed");
 });
+
+// need to update total time spent whenever a user reloads a tab that is currently tracked

@@ -24,7 +24,7 @@ export async function displayCurrentTab() {
       visits: currentActiveTab.timesVisited,
     });
     metrics.forEach((metric, i) => {
-      metric.textContent = Math.floor(data[i]);
+      metric.textContent = data[i];
     });
     currentActiveTab.isTracked &&
       slideBtn.classList.replace("isNotTracked", "isTracked");
@@ -32,19 +32,16 @@ export async function displayCurrentTab() {
 }
 
 function formatMetricData({
-  time: { currentTrackedTime, initialTrackedTime },
+  time: { totalTimeSpent, dailyTimeSpent },
   visits,
 }) {
+  console.log((totalTimeSpent / (1000 * 60 * 60)) % 24);
   let formattedData;
   if (visits !== undefined) {
     formattedData = [
-      // wrong everytime a user clicks on popup action it calculates the total time between initial and current time
-      // instead of accumulating every visit and exit to total time totalTime = n(fromVisitTime - onExitTime)
-      (currentTrackedTime - initialTrackedTime) / 3600000,
+      ((totalTimeSpent / (1000 * 60 * 60)) % 24).toFixed(1),
       visits,
-      // wrong this needs the get the daily reset and accumulate the same way as from totalTime
-      // dailySpent = n(fromVisitTime - onExitTime)
-      (Date.now() - currentTrackedTime) / 3600000,
+      dailyTimeSpent,
     ];
   }
   return {
