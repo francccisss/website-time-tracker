@@ -68,6 +68,11 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
+chrome.storage.onChanged.addListener(async () => {
+  const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+  console.log(trackedSites);
+});
+
 // improve smelly code
 chrome.history.onVisited.addListener(async ({ url }) => {
   const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
