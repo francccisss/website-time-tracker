@@ -13,17 +13,20 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
     const currentActiveTab = await getCurrentActiveTab(url);
     const currentTime = Date.now();
     if (currentActiveTab !== undefined) {
-      const updateCurrentTab = {
-        ...site,
-        isTracked: site.isTracked ? false : true,
-        timesVisited: site.timesVisited + 1,
-        time: {
-          ...site.time,
-          currentTrackedTime: currentTime,
-        },
-      };
       const updateTrackedSites = trackedSites.map((site) => {
-        site.url.includes(currentActiveTab.url) ? updateCurrentTab : site;
+        if (site.url.includes(currentActiveTab.url)) {
+          const updateCurrentTab = {
+            ...site,
+            isTracked: site.isTracked ? false : true,
+            timesVisited: site.timesVisited + 1,
+            time: {
+              ...site.time,
+              currentTrackedTime: currentTime,
+            },
+          };
+          return updateCurrentTab;
+        }
+        return site;
       });
       await chrome.storage.local.set({
         trackedSites: updateTrackedSites,
@@ -80,19 +83,23 @@ chrome.history.onVisited.addListener(async ({ url }) => {
     const currentActiveTab = await getCurrentActiveTab(url);
     if (currentActiveTab !== undefined) {
       const currentTime = Date.now();
-      const updateCurrentTab = {
-        ...site,
-        timesVisited: site.timesVisited + 1,
-        time: {
-          ...site.time,
-          currentTrackedTime: currentTime,
-        },
-      };
       await chrome.storage.local.set({
         trackedSites: trackedSites.map((site) => {
-          site.url.includes(currentActiveTab.url) && currentActiveTab.isTracked
-            ? updateCurrentTab
-            : site;
+          if (
+            site.url.includes(currentActiveTab.url) &&
+            currentActiveTab.isTracked
+          ) {
+            const updateCurrentTab = {
+              ...site,
+              timesVisited: site.timesVisited + 1,
+              time: {
+                ...site.time,
+                currentTrackedTime: currentTime,
+              },
+            };
+            return updateCurrentTab;
+          }
+          return site;
         }),
       });
     }
@@ -125,22 +132,25 @@ chrome.runtime.onConnect.addListener(async (port) => {
         const { trackedSites } = await chrome.storage.local.get([
           "trackedSites",
         ]);
-        const updatedActiveTab = {
-          ...currentActiveTab,
-          time: {
-            ...currentActiveTab.time,
-            totalTimeSpent:
-              currentActiveTab.time.totalTimeSpent +
-              (currentTime - currentActiveTab.time.currentTrackedTime),
-            dailyTimeSpent: 20,
-          },
-        };
         await chrome.storage.local.set({
-          trackedSites: trackedSites.map((site) =>
-            site.url === currentActiveTab.url ? updatedActiveTab : site
-          ),
+          trackedSites: trackedSites.map((site) => {
+            if (site.url === currentActiveTab.url) {
+              const updatedActiveTab = {
+                ...currentActiveTab,
+                time: {
+                  ...currentActiveTab.time,
+                  totalTimeSpent:
+                    currentActiveTab.time.totalTimeSpent +
+                    (currentTime - currentActiveTab.time.currentTrackedTime),
+                  dailyTimeSpent: 20,
+                },
+              };
+              console.log(updatedActiveTab);
+              return updatedActiveTab;
+            }
+            return site;
+          }),
         });
-        console.log(updatedActiveTab);
       } else {
         console.log("is not in database");
       }
