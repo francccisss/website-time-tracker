@@ -82,14 +82,18 @@ chrome.history.onVisited.addListener(async () => {
 chrome.runtime.onConnect.addListener(async (port) => {
   if (port.name === "connect") {
     let trackedTabUrl;
+    let documentId;
     port.onMessage.addListener((msg, { sender }) => {
       console.log(msg);
       trackedTabUrl = sender.url;
+      documentId = sender.documentId;
+      console.log(documentId);
     });
-    port.onDisconnect.addListener(async () => {
+    port.onDisconnect.addListener(async ({ sender }) => {
       console.log("disconnected");
+      console.log(sender.documentId);
       const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
-      if (currentActiveTab !== undefined) {
+      if (sender.documentId === documentId && currentActiveTab !== undefined) {
         const currentTime = Date.now();
         const { trackedSites } = await chrome.storage.local.get([
           "trackedSites",
