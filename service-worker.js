@@ -74,24 +74,22 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
-// every time a user opens a tab of the same url `n` times,
-// a connection is established for each tab with the same url,
-// so when a user decides to close one tab of the same url,
-// the established connection between all similar urls will
-// not be disconnected until there is none left of the same url.
+// another problem:
+// when a user is in a homepage of a website and clicks on the navigation links
+// to route to another webpage, the connection that was established is still considered
+// a single connection from the initial visit (which is good), but if the user disconnects or removes
+// the tab, this would call the onDiconnect event `n` times based on how many times
+// a user navigates the website
+
 chrome.runtime.onConnect.addListener(async (port) => {
   if (port.name === "connect") {
     let trackedTabUrl;
     let documentId;
-    port.onMessage.addListener((msg, { sender }) => {
-      console.log(msg);
+    port.onMessage.addListener(async (msg, { sender }) => {
       trackedTabUrl = sender.url;
       documentId = sender.documentId;
-      console.log(documentId);
     });
     port.onDisconnect.addListener(async ({ sender }) => {
-      console.log("disconnected");
-      console.log(sender.documentId);
       const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
       if (sender.documentId === documentId && currentActiveTab !== undefined) {
         const currentTime = Date.now();
@@ -157,5 +155,3 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 chrome.tabs.onRemoved.addListener(async () => {
   console.log("tab removed");
 });
-
-// need to update total time spent whenever a user reloads a tab that is currently tracked
