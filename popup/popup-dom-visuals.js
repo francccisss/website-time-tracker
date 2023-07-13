@@ -32,13 +32,13 @@ export async function displayCurrentTab() {
 }
 
 function formatMetricData({
-  time: { totalTimeSpent, dailyTimeSpent },
+  time: { totalTimeSpent, dailyTimeSpent, currentTrackedTime },
   visits,
 }) {
   let formattedData;
-  const millToHours = (totalTimeSpent / (1000 * 60 * 60)) % 24;
-  console.log(millToHours < 0.099);
-  console.log(millToHours);
+  const calculateTotalTime = totalTimeSpent + (Date.now() - currentTrackedTime);
+  console.log(calculateTotalTime);
+  const millToHours = (calculateTotalTime / (1000 * 60 * 60)) % 24;
   if (visits !== undefined) {
     formattedData = [
       `${Math.floor(millToHours)}:${(millToHours % 1).toFixed(2).substring(2)}`,
