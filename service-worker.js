@@ -31,7 +31,7 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
       await chrome.storage.local.set({
         trackedSites: updateTrackedSites,
       });
-    } else if (currentActiveTab === undefined) {
+    } else {
       const createCurrentTabData = {
         url: new URL(url).hostname,
         title,
@@ -52,12 +52,6 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
   }
 });
 
-chrome.storage.onChanged.addListener(async () => {
-  await chrome.storage.local.get(["trackedSites"]).then((result) => {
-    console.log(result.trackedSites);
-  });
-});
-
 chrome.history.onVisited.addListener(async () => {
   const [{ id }] = await chrome.tabs.query({
     active: true,
@@ -74,12 +68,50 @@ chrome.history.onVisited.addListener(async () => {
   }
 });
 
+// improve smelly code
+chrome.history.onVisited.addListener(async ({ url }) => {
+  const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+  // get tabs array and check each tab if a tab is a the same as the current tab that is to be refreshed,
+  // if there are tabs that exist that are the same as the current active one, then dont update the current time
+  // and do nothing
+  if (trackedSites.length !== 0) {
+    const currentActiveTab = await getCurrentActiveTab(url);
+    if (currentActiveTab !== undefined) {
+      const currentTime = Date.now();
+      await chrome.storage.local.set({
+        trackedSites: trackedSites.map((site) => {
+          if (
+            site.url.includes(currentActiveTab.url) &&
+            currentActiveTab.isTracked
+          ) {
+            const updateCurrentTab = {
+              ...site,
+              timesVisited: site.timesVisited + 1,
+              time: {
+                ...site.time,
+                currentTrackedTime: currentTime,
+              },
+            };
+            return updateCurrentTab;
+          } else {
+            return site;
+          }
+        }),
+      });
+    }
+  } else {
+    console.log("tracked sites empty");
+  }
+});
+
 // another problem:
 // when a user is in a homepage of a website and clicks on the navigation links
 // to route to another webpage, the connection that was established is still considered
 // a single connection from the initial visit (which is good), but if the user disconnects or removes
 // the tab, this would call the onDiconnect event `n` times based on how many times
 // a user navigates the website
+
+// time is not being tracked because the service worker timed out
 
 chrome.runtime.onConnect.addListener(async (port) => {
   if (port.name === "connect") {
@@ -116,39 +148,6 @@ chrome.runtime.onConnect.addListener(async (port) => {
         console.log("is not in database");
       }
     });
-  }
-});
-
-// improve smelly code
-chrome.history.onVisited.addListener(async ({ url }) => {
-  const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-  if (trackedSites.length !== 0) {
-    const currentActiveTab = await getCurrentActiveTab(url);
-    if (currentActiveTab !== undefined) {
-      const currentTime = Date.now();
-      await chrome.storage.local.set({
-        trackedSites: trackedSites.map((site) => {
-          if (
-            site.url.includes(currentActiveTab.url) &&
-            currentActiveTab.isTracked
-          ) {
-            const updateCurrentTab = {
-              ...site,
-              timesVisited: site.timesVisited + 1,
-              time: {
-                ...site.time,
-                currentTrackedTime: currentTime,
-              },
-            };
-            return updateCurrentTab;
-          } else {
-            return site;
-          }
-        }),
-      });
-    }
-  } else {
-    console.log("tracked sites empty");
   }
 });
 
