@@ -35,11 +35,13 @@ function formatMetricData({
   time: { totalTimeSpent, dailyTimeSpent },
   visits,
 }) {
-  console.log((totalTimeSpent / (1000 * 60 * 60)) % 24);
   let formattedData;
+  const millToHours = (totalTimeSpent / (1000 * 60 * 60)) % 24;
+  console.log(millToHours < 0.099);
+  console.log(millToHours);
   if (visits !== undefined) {
     formattedData = [
-      ((totalTimeSpent / (1000 * 60 * 60)) % 24).toFixed(1),
+      `${Math.floor(millToHours)}:${(millToHours % 1).toFixed(2).substring(2)}`,
       visits,
       dailyTimeSpent,
     ];
