@@ -40,11 +40,7 @@ function formatMetricData({
   console.log(calculateTotalTime);
   const millToHours = (calculateTotalTime / (1000 * 60 * 60)) % 24;
   if (visits !== undefined) {
-    formattedData = [
-      `${Math.floor(millToHours)}:${(millToHours % 1).toFixed(2).substring(2)}`,
-      visits,
-      dailyTimeSpent,
-    ];
+    formattedData = [`${Math.floor(millToHours)}`, visits, dailyTimeSpent];
   }
   return {
     data: formattedData,
