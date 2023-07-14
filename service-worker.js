@@ -14,23 +14,22 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
     const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
     const currentTime = Date.now();
     if (currentActiveTab !== undefined) {
-      const updateTrackedSites = trackedSites.map((site) => {
-        if (site.url.includes(currentActiveTab.url)) {
-          const updateCurrentTab = {
-            ...site,
-            isTracked: site.isTracked ? false : true,
-            timesVisited: site.timesVisited + 1,
-            time: {
-              ...site.time,
-              currentTrackedTime: currentTime,
-            },
-          };
-          return updateCurrentTab;
-        }
-        return site;
-      });
       await chrome.storage.local.set({
-        trackedSites: updateTrackedSites,
+        trackedSites: trackedSites.map((site) => {
+          if (site.url.includes(currentActiveTab.url)) {
+            const updateCurrentTab = {
+              ...site,
+              isTracked: site.isTracked ? false : true,
+              timesVisited: site.timesVisited + 1,
+              time: {
+                ...site.time,
+                currentTrackedTime: currentTime,
+              },
+            };
+            return updateCurrentTab;
+          }
+          return site;
+        }),
       });
     } else {
       const createCurrentTabData = {
