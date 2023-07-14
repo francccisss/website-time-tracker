@@ -11,6 +11,7 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
       lastFocusedWindow: true,
     });
     const currentActiveTab = await getCurrentActiveTab(url);
+    const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
     const currentTime = Date.now();
     if (currentActiveTab !== undefined) {
       const updateTrackedSites = trackedSites.map((site) => {
@@ -37,14 +38,13 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
         title,
         favIconUrl,
         isTracked: true,
-        timesVisited: 0,
+        timesVisited: 1,
         time: {
           currentTrackedTime: currentTime,
           totalTimeSpent: 0,
           dailyTimeSpent: 0,
         },
       };
-      const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
       await chrome.storage.local.set({
         trackedSites: [createCurrentTabData, ...trackedSites],
       });
