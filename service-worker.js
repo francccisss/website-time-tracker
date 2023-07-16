@@ -72,13 +72,10 @@ chrome.storage.onChanged.addListener(async () => {
 	console.log(trackedSites);
 });
 
-chrome.history.onVisited.addListener(async ({ url }) => {
-	// whenever a user navigates on a website, this listener is called
-	// even though it's navigating within the same origin
-	// so when a user navigates the extension keeps updating the time
-	// instead of retaining the same time from the initial visit
-	// need to either disconnect the script when navigating within a website
-	console.log("lol");
+// will only trigger on first visit ignoring the back forward cache and navigation
+// NOTE: reloading webpage is not ignored
+chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
+	console.log("first visit");
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 	if (trackedSites.length !== 0) {
 		const currentActiveTab = await getCurrentActiveTab(url);
@@ -106,6 +103,37 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 		}
 	} else {
 		console.log("tracked sites empty");
+	}
+});
+
+// navigating webpages should store current time
+chrome.history.onVisited.addListener(async ({ url }) => {
+	const currentActiveTab = await getCurrentActiveTab(url);
+	if (currentActiveTab !== undefined) {
+		const currentTime = Date.now();
+		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+		await chrome.storage.local.set({
+			trackedSites: trackedSites.map((site) => {
+				if (site.url === currentActiveTab.url) {
+					const updatedActiveTab = {
+						...currentActiveTab,
+						time: {
+							...currentActiveTab.time,
+							totalTimeSpent:
+								currentActiveTab.time.totalTimeSpent +
+								(currentTime -
+									currentActiveTab.time.currentTrackedTime),
+							dailyTimeSpent: 20,
+						},
+					};
+					console.log(updatedActiveTab);
+					return updatedActiveTab;
+				}
+				return site;
+			}),
+		});
+	} else {
+		console.log("is not in database");
 	}
 });
 
@@ -155,8 +183,4 @@ chrome.runtime.onConnect.addListener(async (port) => {
 			}
 		});
 	}
-});
-
-chrome.webNavigation.onDomContentLoaded.addListener((details) => {
-	console.log(details.url);
 });
