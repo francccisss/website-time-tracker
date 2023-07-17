@@ -1,4 +1,7 @@
-import { getCurrentActiveTab } from "./utils/service-worker.utils.js";
+import {
+	getCurrentActiveTab,
+	updateTrackedOnDelete,
+} from "./utils/service-worker.utils.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
 	reason === "install" && chrome.storage.local.set({ trackedSites: [] });
@@ -82,6 +85,7 @@ chrome.storage.onChanged.addListener(async () => {
 
 // will only trigger on first visit ignoring the back forward cache and navigation
 // NOTE: reloading webpage is not ignored
+// NOTE NOTE: for some reason some sites have different DOM document when navigating
 chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	console.log("first visit");
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -118,27 +122,8 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 chrome.history.onVisited.addListener(async ({ url }) => {
 	const currentActiveTab = await getCurrentActiveTab(url);
 	if (currentActiveTab !== undefined) {
-		const currentTime = Date.now();
-		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 		await chrome.storage.local.set({
-			trackedSites: trackedSites.map((site) => {
-				if (site.url === currentActiveTab.url) {
-					const updatedActiveTab = {
-						...currentActiveTab,
-						time: {
-							totalTimeSpent:
-								currentActiveTab.time.totalTimeSpent +
-								(currentTime -
-									currentActiveTab.time.currentTrackedTime),
-							dailyTimeSpent: 20,
-							currentTrackedTime: 0,
-						},
-					};
-					console.log(updatedActiveTab);
-					return updatedActiveTab;
-				}
-				return site;
-			}),
+			trackedsites: updateTrackedOnDelete(currentActiveTab),
 		});
 	} else {
 		console.log("is not in database");
@@ -164,30 +149,8 @@ chrome.runtime.onConnect.addListener(async (port) => {
 				sender.documentId === documentId &&
 				currentActiveTab !== undefined
 			) {
-				const currentTime = Date.now();
-				const { trackedSites } = await chrome.storage.local.get([
-					"trackedSites",
-				]);
 				await chrome.storage.local.set({
-					trackedSites: trackedSites.map((site) => {
-						if (site.url === currentActiveTab.url) {
-							const updatedActiveTab = {
-								...currentActiveTab,
-								time: {
-									...currentActiveTab.time,
-									totalTimeSpent:
-										currentActiveTab.time.totalTimeSpent +
-										(currentTime -
-											currentActiveTab.time.currentTrackedTime),
-									dailyTimeSpent: 20,
-									currentTrackedTime: 0,
-								},
-							};
-							console.log(updatedActiveTab);
-							return updatedActiveTab;
-						}
-						return site;
-					}),
+					trackedsites: updateTrackedOnDelete(currentActiveTab),
 				});
 			} else {
 				console.log("is not in database");
