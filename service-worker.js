@@ -85,6 +85,7 @@ chrome.storage.onChanged.addListener(async () => {
 
 // will only trigger on first visit ignoring the back forward cache and navigation
 // NOTE: reloading webpage is not ignored
+// NOTE NOTE: for some reason some sites have different DOM document when navigating
 chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	console.log("first visit");
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -117,7 +118,6 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	}
 });
 
-// this will calculate the time the user visits, navigates or refreshes the page.
 chrome.history.onVisited.addListener(async ({ url }) => {
 	const currentActiveTab = await getCurrentActiveTab(url);
 	if (currentActiveTab !== undefined) {
@@ -127,9 +127,6 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 	}
 });
 
-// navigating in a website and visiting will run the onConnect event (establishes a connection between the injectd script on the host page)
-// will establish a connection by injecting the content script on the host page and invoking the connect method.
-// refreshing or removing the tab will invoke the onDisconnect listener and calculate the time of visit and time of disconnection.
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
 		let trackedTabUrl;
