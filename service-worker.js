@@ -1,7 +1,7 @@
 import {
 	getCurrentActiveTab,
 	loadCurrentActiveTrackedTab,
-	updateTrackedTabsOnDeleted,
+	setCurrentTabTotalTime,
 } from "./utils/service-worker.utils.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -58,18 +58,22 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
 });
 
 chrome.history.onVisited.addListener(async () => {
-	const [{ id }] = await chrome.tabs.query({
+	const [{ id, status }] = await chrome.tabs.query({
 		active: true,
 		lastFocusedWindow: true,
 	});
-	try {
-		await chrome.scripting.executeScript({
-			target: { tabId: id },
-			files: ["/content-script/connection.js"],
-		});
-		console.log("successfully injected");
-	} catch (err) {
-		console.log("unable to inject script");
+	console.log(status);
+	if (status === "complete") {
+		console.log("ready to inject script");
+		try {
+			await chrome.scripting.executeScript({
+				target: { tabId: id },
+				files: ["/content-script/connection.js"],
+			});
+			console.log("successfully injected");
+		} catch (err) {
+			console.log("unable to inject script");
+		}
 	}
 });
 
@@ -78,17 +82,8 @@ chrome.storage.onChanged.addListener(async () => {
 	console.log(trackedSites);
 });
 
-// Logic:
-// WHAT IS TRIGGERED ON FIRST VISIT OF USER
-// > when a user first visits the page onDOMContentLoad() is triggered (will only trigger once until first visit or refreshed)
-//   and setting the currentTrackedTime to current time Date.now()
-// > onVisited() is also triggered which calculates the currentTrackedTime and current time (time of visit,refresh or redirections)
-// 	*the onVisited() doesnt't matter on first visit since its calculating the time of an insignificant value in milliseconds
-//  ( getting totalTime = totalTime + (currentTrackedTime - Date.now()) ) *
-
-// will only trigger on first visit ignoring the back forward cache and navigation
-// NOTE: reloading webpage is not ignored
-// NOTE NOTE: for some reason some sites have different DOM document when navigating
+// currentTrackedTime will still persist throught the whole navigation of a website
+// until user visits a different site on the same tab
 
 chrome.webNavigation.onDOMContentLoaded.addListener(
 	async ({ url, frameId }) => {
@@ -103,26 +98,25 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 				currentActiveTab !== undefined
 					? await loadCurrentActiveTrackedTab(currentActiveTab)
 					: null;
-			} else {
-				console.log("tracked sites empty");
 			}
 		}
 	}
 );
 
-// on refresh, initial visit and navigation
+// on refresh, initial visit (will be completed to load after onDOMContentLoaded event finishes) and navigation
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	if (changeInfo.status === "complete") {
 		console.log("completed");
 		const currentActiveTab = await getCurrentActiveTab(tab.url);
 		currentActiveTab !== undefined
-			? await updateTrackedTabsOnDeleted(currentActiveTab)
+			? await setCurrentTabTotalTime(currentActiveTab)
 			: null;
 	} else {
 		console.log("loading");
 	}
 });
 
+// FOR DISCONNECTING
 // on remove or refresh
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
@@ -140,7 +134,7 @@ chrome.runtime.onConnect.addListener(async (port) => {
 				sender.documentId === documentId &&
 				currentActiveTab !== undefined
 			) {
-				await updateTrackedTabsOnDeleted(currentActiveTab);
+				await setCurrentTabTotalTime(currentActiveTab);
 			}
 		});
 	}
