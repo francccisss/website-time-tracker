@@ -72,6 +72,14 @@ chrome.storage.onChanged.addListener(async () => {
 	console.log(trackedSites);
 });
 
+// Logic:
+// WHAT IS TRIGGERED ON FIRST VISIT OF USER
+// > when a user first visits the page onDOMContentLoad() is triggered (will only trigger once until first visit or refreshed)
+//   and setting the currentTrackedTime to current time Date.now()
+// > onVisited() is also triggered which calculates the currentTrackedTime and current time (time of visit,refresh or redirections)
+// 	*the onVisited() doesnt't matter on first visit since its calculating the time of an insignificant value in milliseconds
+//  ( getting totalTime = totalTime + (currentTrackedTime - Date.now()) ) *
+
 // will only trigger on first visit ignoring the back forward cache and navigation
 // NOTE: reloading webpage is not ignored
 chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
@@ -106,7 +114,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	}
 });
 
-// navigating webpages should store current time
+// this will calculate the time the user visits, navigates or refreshes the page.
 chrome.history.onVisited.addListener(async ({ url }) => {
 	const currentActiveTab = await getCurrentActiveTab(url);
 	if (currentActiveTab !== undefined) {
@@ -118,12 +126,12 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 					const updatedActiveTab = {
 						...currentActiveTab,
 						time: {
-							...currentActiveTab.time,
 							totalTimeSpent:
 								currentActiveTab.time.totalTimeSpent +
 								(currentTime -
 									currentActiveTab.time.currentTrackedTime),
 							dailyTimeSpent: 20,
+							currentTrackedTime: 0,
 						},
 					};
 					console.log(updatedActiveTab);
@@ -137,6 +145,9 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 	}
 });
 
+// navigating in a website and visiting will run the onConnect event (establishes a connection between the injectd script on the host page)
+// will establish a connection by injecting the content script on the host page and invoking the connect method.
+// refreshing or removing the tab will invoke the onDisconnect listener and calculate the time of visit and time of disconnection.
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
 		let trackedTabUrl;
@@ -148,7 +159,6 @@ chrome.runtime.onConnect.addListener(async (port) => {
 		});
 		port.onDisconnect.addListener(async ({ sender }) => {
 			console.log("disconnected");
-			// refreshing disconnects the connection
 			const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
 			if (
 				sender.documentId === documentId &&
@@ -170,6 +180,7 @@ chrome.runtime.onConnect.addListener(async (port) => {
 										(currentTime -
 											currentActiveTab.time.currentTrackedTime),
 									dailyTimeSpent: 20,
+									currentTrackedTime: 0,
 								},
 							};
 							console.log(updatedActiveTab);
