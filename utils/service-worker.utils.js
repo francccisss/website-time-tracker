@@ -23,7 +23,6 @@ export async function setCurrentTabTotalTime(currentActiveTab) {
 						dailyTimeSpent: 20,
 					},
 				};
-				console.log(updatedActiveTab);
 				return updatedActiveTab;
 			}
 			return site;

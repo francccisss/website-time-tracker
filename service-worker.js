@@ -80,11 +80,10 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 
 chrome.storage.onChanged.addListener(async () => {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-	console.log(trackedSites);
+	for (let site of trackedSites) {
+		console.table({ time: site.time });
+	}
 });
-
-// currentTrackedTime will still persist throught the whole navigation of a website
-// until user visits a different site on the same tab
 
 chrome.webNavigation.onDOMContentLoaded.addListener(
 	async ({ url, frameId }) => {
@@ -103,6 +102,9 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 		}
 	}
 );
+
+// Problem logic
+// everytime user navigates, the totalTime is not calculated accurately
 
 // on refresh, initial visit (will be completed to load after onDOMContentLoaded event finishes) and navigation
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
