@@ -57,25 +57,26 @@ chrome.runtime.onMessage.addListener(async ({ track }) => {
 	}
 });
 
-chrome.history.onVisited.addListener(async () => {
-	const [{ id, status }] = await chrome.tabs.query({
-		active: true,
-		lastFocusedWindow: true,
-	});
-	console.log(status);
-	if (status === "complete") {
-		console.log("ready to inject script");
-		try {
-			await chrome.scripting.executeScript({
-				target: { tabId: id },
-				files: ["/content-script/connection.js"],
-			});
-			console.log("successfully injected");
-		} catch (err) {
-			console.log("unable to inject script");
+chrome.webNavigation.onDOMContentLoaded.addListener(
+	async ({ url, frameId }) => {
+		const [{ id }] = await chrome.tabs.query({
+			active: true,
+			lastFocusedWindow: true,
+		});
+		if (frameId === 0) {
+			console.log("ready to inject script");
+			try {
+				await chrome.scripting.executeScript({
+					target: { tabId: id },
+					files: ["/content-script/connection.js"],
+				});
+				console.log("successfully injected");
+			} catch (err) {
+				console.log("unable to inject script");
+			}
 		}
 	}
-});
+);
 
 chrome.storage.onChanged.addListener(async () => {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -106,7 +107,6 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 // on refresh, initial visit (will be completed to load after onDOMContentLoaded event finishes) and navigation
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	if (changeInfo.status === "complete") {
-		console.log("completed");
 		const currentActiveTab = await getCurrentActiveTab(tab.url);
 		currentActiveTab !== undefined
 			? await setCurrentTabTotalTime(currentActiveTab)
