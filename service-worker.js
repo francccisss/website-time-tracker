@@ -90,19 +90,27 @@ chrome.storage.onChanged.addListener(async () => {
 // NOTE: reloading webpage is not ignored
 // NOTE NOTE: for some reason some sites have different DOM document when navigating
 
-chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
-	console.log("first visit");
-	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-	if (trackedSites.length !== 0) {
-		const currentActiveTab = await getCurrentActiveTab(url);
-		currentActiveTab !== undefined
-			? await loadCurrentActiveTrackedTab(currentActiveTab)
-			: null;
-	} else {
-		console.log("tracked sites empty");
+chrome.webNavigation.onDOMContentLoaded.addListener(
+	async ({ url, frameId }) => {
+		// to only wait for the main frame and not subrframes of first load
+		if (frameId === 0) {
+			console.log("first visit");
+			const { trackedSites } = await chrome.storage.local.get([
+				"trackedSites",
+			]);
+			if (trackedSites.length !== 0) {
+				const currentActiveTab = await getCurrentActiveTab(url);
+				currentActiveTab !== undefined
+					? await loadCurrentActiveTrackedTab(currentActiveTab)
+					: null;
+			} else {
+				console.log("tracked sites empty");
+			}
+		}
 	}
-});
+);
 
+// on refresh, initial visit and navigation
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	if (changeInfo.status === "complete") {
 		console.log("completed");
@@ -115,6 +123,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 	}
 });
 
+// on remove or refresh
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
 		let trackedTabUrl;
