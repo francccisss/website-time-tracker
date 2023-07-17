@@ -126,12 +126,12 @@ chrome.history.onVisited.addListener(async ({ url }) => {
 					const updatedActiveTab = {
 						...currentActiveTab,
 						time: {
+							currentTrackedTime: 0,
 							totalTimeSpent:
 								currentActiveTab.time.totalTimeSpent +
 								(currentTime -
 									currentActiveTab.time.currentTrackedTime),
 							dailyTimeSpent: 20,
-							currentTrackedTime: 0,
 						},
 					};
 					console.log(updatedActiveTab);
@@ -174,13 +174,12 @@ chrome.runtime.onConnect.addListener(async (port) => {
 							const updatedActiveTab = {
 								...currentActiveTab,
 								time: {
-									...currentActiveTab.time,
+									currentTrackedTime: 0,
 									totalTimeSpent:
 										currentActiveTab.time.totalTimeSpent +
 										(currentTime -
 											currentActiveTab.time.currentTrackedTime),
 									dailyTimeSpent: 20,
-									currentTrackedTime: 0,
 								},
 							};
 							console.log(updatedActiveTab);
