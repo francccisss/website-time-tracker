@@ -86,6 +86,7 @@ chrome.storage.onChanged.addListener(async () => {
 // will only trigger on first visit ignoring the back forward cache and navigation
 // NOTE: reloading webpage is not ignored
 // NOTE NOTE: for some reason some sites have different DOM document when navigating
+
 chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	console.log("first visit");
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -118,12 +119,18 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	}
 });
 
-chrome.history.onVisited.addListener(async ({ url }) => {
-	const currentActiveTab = await getCurrentActiveTab(url);
-	if (currentActiveTab !== undefined) {
-		await updateTrackedTabsOnDeleted(currentActiveTab);
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+	console.log(changeInfo);
+	if (changeInfo.status === "complete") {
+		console.log("completed");
+		const currentActiveTab = await getCurrentActiveTab(tab.url);
+		if (currentActiveTab !== undefined) {
+			await updateTrackedTabsOnDeleted(currentActiveTab);
+		} else {
+			console.log("is not in database");
+		}
 	} else {
-		console.log("is not in database");
+		console.log("huh");
 	}
 });
 
