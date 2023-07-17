@@ -1,11 +1,14 @@
 import {
 	getCurrentActiveTab,
+	loadCurrentActiveTrackedTab,
 	updateTrackedTabsOnDeleted,
 } from "./utils/service-worker.utils.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
 	reason === "install" && chrome.storage.local.set({ trackedSites: [] });
 });
+
+// REFACTOR THIS
 
 chrome.runtime.onMessage.addListener(async ({ track }) => {
 	if (track) {
@@ -92,45 +95,23 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
 	if (trackedSites.length !== 0) {
 		const currentActiveTab = await getCurrentActiveTab(url);
-		if (currentActiveTab !== undefined) {
-			const currentTime = Date.now();
-			await chrome.storage.local.set({
-				trackedSites: trackedSites.map((site) => {
-					if (
-						site.url.includes(currentActiveTab.url) &&
-						currentActiveTab.isTracked
-					) {
-						const updateCurrentTab = {
-							...site,
-							timesVisited: site.timesVisited + 1,
-							time: {
-								...site.time,
-								currentTrackedTime: currentTime,
-							},
-						};
-						return updateCurrentTab;
-					}
-					return site;
-				}),
-			});
-		}
+		currentActiveTab !== undefined
+			? await loadCurrentActiveTrackedTab(currentActiveTab)
+			: null;
 	} else {
 		console.log("tracked sites empty");
 	}
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-	console.log(changeInfo);
 	if (changeInfo.status === "complete") {
 		console.log("completed");
 		const currentActiveTab = await getCurrentActiveTab(tab.url);
-		if (currentActiveTab !== undefined) {
-			await updateTrackedTabsOnDeleted(currentActiveTab);
-		} else {
-			console.log("is not in database");
-		}
+		currentActiveTab !== undefined
+			? await updateTrackedTabsOnDeleted(currentActiveTab)
+			: null;
 	} else {
-		console.log("huh");
+		console.log("loading");
 	}
 });
 
@@ -151,8 +132,6 @@ chrome.runtime.onConnect.addListener(async (port) => {
 				currentActiveTab !== undefined
 			) {
 				await updateTrackedTabsOnDeleted(currentActiveTab);
-			} else {
-				console.log("is not in database");
 			}
 		});
 	}

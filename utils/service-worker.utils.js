@@ -6,6 +6,7 @@ export async function getCurrentActiveTab(url) {
 	return currentActiveTab;
 }
 
+// problem with facebook reels and shit
 export async function updateTrackedTabsOnDeleted(currentActiveTab) {
 	const currentTime = Date.now();
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
@@ -24,6 +25,30 @@ export async function updateTrackedTabsOnDeleted(currentActiveTab) {
 				};
 				console.log(updatedActiveTab);
 				return updatedActiveTab;
+			}
+			return site;
+		}),
+	});
+}
+
+export async function loadCurrentActiveTrackedTab(currentActiveTab) {
+	const currentTime = Date.now();
+	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+	await chrome.storage.local.set({
+		trackedSites: trackedSites.map((site) => {
+			if (
+				site.url.includes(currentActiveTab.url) &&
+				currentActiveTab.isTracked
+			) {
+				const updateCurrentTab = {
+					...site,
+					timesVisited: site.timesVisited + 1,
+					time: {
+						...site.time,
+						currentTrackedTime: currentTime,
+					},
+				};
+				return updateCurrentTab;
 			}
 			return site;
 		}),
