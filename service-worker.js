@@ -1,4 +1,7 @@
-import { getCurrentActiveTab } from "./utils/service-worker.utils.js";
+import {
+	getCurrentActiveTab,
+	updateTrackedTabsOnDeleted,
+} from "./utils/service-worker.utils.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
 	reason === "install" && chrome.storage.local.set({ trackedSites: [] });
@@ -118,28 +121,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(async ({ url }) => {
 chrome.history.onVisited.addListener(async ({ url }) => {
 	const currentActiveTab = await getCurrentActiveTab(url);
 	if (currentActiveTab !== undefined) {
-		const currentTime = Date.now();
-		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-		await chrome.storage.local.set({
-			trackedSites: trackedSites.map((site) => {
-				if (site.url === currentActiveTab.url) {
-					const updatedActiveTab = {
-						...currentActiveTab,
-						time: {
-							currentTrackedTime: 0,
-							totalTimeSpent:
-								currentActiveTab.time.totalTimeSpent +
-								(currentTime -
-									currentActiveTab.time.currentTrackedTime),
-							dailyTimeSpent: 20,
-						},
-					};
-					console.log(updatedActiveTab);
-					return updatedActiveTab;
-				}
-				return site;
-			}),
-		});
+		await updateTrackedTabsOnDeleted(currentActiveTab);
 	} else {
 		console.log("is not in database");
 	}
@@ -164,30 +146,7 @@ chrome.runtime.onConnect.addListener(async (port) => {
 				sender.documentId === documentId &&
 				currentActiveTab !== undefined
 			) {
-				const currentTime = Date.now();
-				const { trackedSites } = await chrome.storage.local.get([
-					"trackedSites",
-				]);
-				await chrome.storage.local.set({
-					trackedSites: trackedSites.map((site) => {
-						if (site.url === currentActiveTab.url) {
-							const updatedActiveTab = {
-								...currentActiveTab,
-								time: {
-									currentTrackedTime: 0,
-									totalTimeSpent:
-										currentActiveTab.time.totalTimeSpent +
-										(currentTime -
-											currentActiveTab.time.currentTrackedTime),
-									dailyTimeSpent: 20,
-								},
-							};
-							console.log(updatedActiveTab);
-							return updatedActiveTab;
-						}
-						return site;
-					}),
-				});
+				await updateTrackedTabsOnDeleted(currentActiveTab);
 			} else {
 				console.log("is not in database");
 			}
