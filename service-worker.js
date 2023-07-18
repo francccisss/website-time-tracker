@@ -107,19 +107,23 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 // everytime user navigates, the totalTime is not calculated accurately
 
 // on refresh, initial visit (will be completed to load after onDOMContentLoaded event finishes) and navigation
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-	if (changeInfo.status === "complete") {
-		const currentActiveTab = await getCurrentActiveTab(tab.url);
-		currentActiveTab !== undefined
-			? await setCurrentTabTotalTime(currentActiveTab)
-			: null;
-	} else {
-		console.log("loading");
-	}
-});
+// chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+// 	if (changeInfo.status === "complete") {
+// 		const currentActiveTab = await getCurrentActiveTab(tab.url);
+// 		currentActiveTab !== undefined
+// 			? await setCurrentTabTotalTime(currentActiveTab)
+// 			: null;
+// 	} else {
+// 		console.log("loading");
+// 	}
+// });
 
 // FOR DISCONNECTING
 // on remove or refresh
+
+// query all the tabs that has an origin of eg: facebook.com, youtube.com etc.
+// and only calculate once all of the queried tabs is 0
+// querying needs to match which tab is going to disconnect
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
 		let trackedTabUrl;
@@ -130,13 +134,20 @@ chrome.runtime.onConnect.addListener(async (port) => {
 			documentId = sender.documentId;
 		});
 		port.onDisconnect.addListener(async ({ sender }) => {
+			let queryUrl = new URL(sender.url).host;
+			const tabs = await chrome.tabs.query({
+				url: `https://${queryUrl}/*`,
+			});
+			console.log(tabs);
 			console.log("disconnected");
-			const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
-			if (
-				sender.documentId === documentId &&
-				currentActiveTab !== undefined
-			) {
-				await setCurrentTabTotalTime(currentActiveTab);
+			if (tabs.length === 0) {
+				const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
+				if (
+					sender.documentId === documentId &&
+					currentActiveTab !== undefined
+				) {
+					await setCurrentTabTotalTime(currentActiveTab);
+				}
 			}
 		});
 	}
