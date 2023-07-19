@@ -103,27 +103,6 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 	}
 );
 
-// Problem logic
-// everytime user navigates, the totalTime is not calculated accurately
-
-// on refresh, initial visit (will be completed to load after onDOMContentLoaded event finishes) and navigation
-// chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-// 	if (changeInfo.status === "complete") {
-// 		const currentActiveTab = await getCurrentActiveTab(tab.url);
-// 		currentActiveTab !== undefined
-// 			? await setCurrentTabTotalTime(currentActiveTab)
-// 			: null;
-// 	} else {
-// 		console.log("loading");
-// 	}
-// });
-
-// FOR DISCONNECTING
-// on remove or refresh
-
-// query all the tabs that has an origin of eg: facebook.com, youtube.com etc.
-// and only calculate once all of the queried tabs is 0
-// querying needs to match which tab is going to disconnect
 chrome.runtime.onConnect.addListener(async (port) => {
 	if (port.name === "connect") {
 		let trackedTabUrl;
@@ -131,21 +110,20 @@ chrome.runtime.onConnect.addListener(async (port) => {
 		port.onMessage.addListener(async (msg, { sender }) => {
 			console.log(msg);
 			trackedTabUrl = sender.url;
+			// shouldn't this get the latest document id? of a message sender?
 			documentId = sender.documentId;
 		});
 		port.onDisconnect.addListener(async ({ sender }) => {
-			let queryUrl = new URL(sender.url).host;
-			const tabs = await chrome.tabs.query({
-				url: `https://${queryUrl}/*`,
-			});
-			console.log(tabs);
-			console.log("disconnected");
-			if (tabs.length === 0) {
+			if (sender.documentId === documentId) {
+				let queryUrl = new URL(sender.url).host;
+				console.log(queryUrl);
+				const tabs = await chrome.tabs.query({
+					url: `https://*.${queryUrl}/*`,
+				});
+				console.log(tabs);
 				const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
-				if (
-					sender.documentId === documentId &&
-					currentActiveTab !== undefined
-				) {
+				if (tabs.length === 0 && currentActiveTab !== undefined) {
+					console.log("disconnected");
 					await setCurrentTabTotalTime(currentActiveTab);
 				}
 			}
