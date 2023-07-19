@@ -8,8 +8,12 @@ export async function getCurrentActiveTab(url) {
 
 // problem with facebook reels and shit
 export async function setCurrentTabTotalTime(currentActiveTab) {
-	const currentTime = Date.now();
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+	const calculateTotalTime = (timeSpent, currentTrackedTime) => {
+		const currentTime = Date.now();
+		const total = timeSpent + (currentTime - currentTrackedTime);
+		return total;
+	};
 	await chrome.storage.local.set({
 		trackedSites: trackedSites.map((site) => {
 			if (site.url === currentActiveTab.url) {
@@ -17,10 +21,14 @@ export async function setCurrentTabTotalTime(currentActiveTab) {
 					...currentActiveTab,
 					time: {
 						...site.time,
-						totalTimeSpent:
-							site.time.totalTimeSpent +
-							(currentTime - site.time.currentTrackedTime),
-						dailyTimeSpent: 20,
+						totalTimeSpent: calculateTotalTime(
+							site.time.totalTimeSpent,
+							site.time.currentTrackedTime
+						),
+						dailyTimeSpent: calculateTotalTime(
+							site.time.dailyTimeSpent,
+							site.time.currentTrackedTime
+						),
 					},
 				};
 				return updatedActiveTab;

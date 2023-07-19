@@ -113,7 +113,9 @@ chrome.runtime.onConnect.addListener(async (port) => {
 			// shouldn't this get the latest document id? of a message sender?
 			documentId = sender.documentId;
 		});
+		// refreshing doesnt disconnect
 		port.onDisconnect.addListener(async ({ sender }) => {
+			console.log("disconnected");
 			if (sender.documentId === documentId) {
 				let queryUrl = new URL(sender.url).host;
 				console.log(queryUrl);
@@ -123,7 +125,6 @@ chrome.runtime.onConnect.addListener(async (port) => {
 				console.log(tabs);
 				const currentActiveTab = await getCurrentActiveTab(trackedTabUrl);
 				if (tabs.length === 0 && currentActiveTab !== undefined) {
-					console.log("disconnected");
 					await setCurrentTabTotalTime(currentActiveTab);
 				}
 			}
