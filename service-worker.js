@@ -9,8 +9,6 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 	reason === "install" && chrome.storage.local.set({ trackedSites: [] });
 });
 
-// REFACTOR THIS
-
 chrome.runtime.onMessage.addListener(async ({ track }) => {
 	if (track) {
 		const [{ url }] = await chrome.tabs.query({
@@ -46,13 +44,6 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 		}
 	}
 );
-
-chrome.storage.onChanged.addListener(async () => {
-	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-	for (let site of trackedSites) {
-		console.table({ time: site.time });
-	}
-});
 
 chrome.webNavigation.onDOMContentLoaded.addListener(
 	async ({ url, frameId }) => {
