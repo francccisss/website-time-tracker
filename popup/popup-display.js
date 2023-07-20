@@ -42,7 +42,14 @@ export async function displayCurrentTab() {
 			visits: currentActiveTab.timesVisited,
 		});
 		metrics.forEach((metric, i) => {
+			const createHrsText = document.createElement("span");
+			console.log(createHrsText);
+			createHrsText.classList.add("hrs-text");
+			createHrsText.textContent = "hrs";
+			metric.append(createHrsText);
 			metric.textContent = data[i];
+			i % 2 === 0 &&
+				metric.insertAdjacentElement("beforeend", createHrsText);
 		});
 		currentActiveTab.isTracked &&
 			slideBtn.classList.replace("isNotTracked", "isTracked");
