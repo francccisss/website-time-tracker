@@ -92,21 +92,10 @@ chrome.runtime.onConnect.addListener(async (port) => {
 	}
 });
 
-chrome.runtime.onStartup.addListener(async () => {
+chrome.storage.onChanged.addListener(async () => {
 	const date = new Date();
-	if (date.getHours() === 24) {
-		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-		await chrome.storage.local.set({
-			trackedSites: trackedSites.map((site) => {
-				const updateTrackedSites = {
-					...site,
-					time: {
-						...site.time,
-						dailyTimeSpent: 0,
-					},
-				};
-				return updateTrackedSites;
-			}),
-		});
-	}
+	console.log(date.getHours());
+	await chrome.storage.local.get(["trackedSites"]).then(({ trackedSites }) => {
+		console.log(trackedSites);
+	});
 });
