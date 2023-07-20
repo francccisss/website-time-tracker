@@ -1,6 +1,7 @@
 import {
 	getCurrentActiveTab,
 	loadCurrentActiveTrackedTab,
+	setCurrentTabToTracked,
 	setCurrentTabTotalTime,
 } from "./utils/service-worker.utils.js";
 
@@ -12,47 +13,15 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 
 chrome.runtime.onMessage.addListener(async ({ track }) => {
 	if (track) {
-		const [{ url, title, favIconUrl }] = await chrome.tabs.query({
+		const [{ url }] = await chrome.tabs.query({
 			active: true,
 			lastFocusedWindow: true,
 		});
-		const currentActiveTab = await getCurrentActiveTab(url);
-		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-		const currentTime = Date.now();
-		if (currentActiveTab !== undefined) {
-			await chrome.storage.local.set({
-				trackedSites: trackedSites.map((site) => {
-					if (site.url.includes(currentActiveTab.url)) {
-						const updateCurrentTab = {
-							...site,
-							isTracked: site.isTracked ? false : true,
-							timesVisited: site.timesVisited + 1,
-							time: {
-								...site.time,
-								currentTrackedTime: currentTime,
-							},
-						};
-						return updateCurrentTab;
-					}
-					return site;
-				}),
-			});
-		} else {
-			const createCurrentTabData = {
-				url: new URL(url).hostname,
-				title,
-				favIconUrl,
-				isTracked: true,
-				timesVisited: 1,
-				time: {
-					currentTrackedTime: currentTime,
-					totalTimeSpent: 0,
-					dailyTimeSpent: 0,
-				},
-			};
-			await chrome.storage.local.set({
-				trackedSites: [createCurrentTabData, ...trackedSites],
-			});
+		try {
+			const currentActiveTab = await getCurrentActiveTab(url);
+			await setCurrentTabToTracked(currentActiveTab);
+		} catch (err) {
+			console.log("unable to track current tab");
 		}
 	}
 });

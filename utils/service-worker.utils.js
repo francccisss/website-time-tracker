@@ -61,3 +61,44 @@ export async function loadCurrentActiveTrackedTab(currentActiveTab) {
 		}),
 	});
 }
+
+export async function setCurrentTabToTracked(currentActiveTab) {
+	const [{ url, title, favIconUrl }] = await chrome.tabs.query({
+		active: true,
+		lastFocusedWindow: true,
+	});
+	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+	const currentTime = Date.now();
+	if (currentActiveTab !== undefined) {
+		const updateCurrentTab = {
+			...currentActiveTab,
+			isTracked: currentActiveTab.isTracked ? false : true,
+			timesVisited: currentActiveTab.timesVisited + 1,
+			time: {
+				...currentActiveTab.time,
+				currentTrackedTime: currentTime,
+			},
+		};
+		await chrome.storage.local.set({
+			trackedSites: trackedSites.map((site) => {
+				site.url.includes(currentActiveTab.url) ? updateCurrentTab : site;
+			}),
+		});
+	} else {
+		const createCurrentTabData = {
+			url: new URL(url).hostname,
+			title,
+			favIconUrl,
+			isTracked: true,
+			timesVisited: 1,
+			time: {
+				currentTrackedTime: currentTime,
+				totalTimeSpent: 0,
+				dailyTimeSpent: 0,
+			},
+		};
+		await chrome.storage.local.set({
+			trackedSites: [createCurrentTabData, ...trackedSites],
+		});
+	}
+}
