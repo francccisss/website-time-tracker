@@ -73,6 +73,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 );
 
 chrome.runtime.onConnect.addListener(async (port) => {
+	console.log(dayToHours.getHours());
 	if (port.name === "connect") {
 		let trackedTabUrl;
 		let documentId;
@@ -97,6 +98,25 @@ chrome.runtime.onConnect.addListener(async (port) => {
 					await setCurrentTabTotalTime(currentActiveTab);
 				}
 			}
+		});
+	}
+});
+
+chrome.runtime.onStartup.addListener(async () => {
+	const date = new Date();
+	if (date.getHours() === 24) {
+		const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+		await chrome.storage.local.set({
+			trackedSites: trackedSites.map((site) => {
+				const updateTrackedSites = {
+					...site,
+					time: {
+						...site.time,
+						dailyTimeSpent: 0,
+					},
+				};
+				return updateTrackedSites;
+			}),
 		});
 	}
 });
