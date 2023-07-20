@@ -73,7 +73,6 @@ chrome.webNavigation.onDOMContentLoaded.addListener(
 );
 
 chrome.runtime.onConnect.addListener(async (port) => {
-	console.log(dayToHours.getHours());
 	if (port.name === "connect") {
 		let trackedTabUrl;
 		let documentId;
