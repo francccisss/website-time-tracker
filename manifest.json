@@ -6,11 +6,10 @@
 	"permissions": [
 		"tabs",
 		"storage",
-		"activeTab",
 		"scripting",
-		"webNavigation"
+		"webNavigation",
+		"activeTab"
 	],
-	"host_permissions": ["<all_urls>"],
 	"action": {
 		"default_popup": "popup/index.html"
 	},
