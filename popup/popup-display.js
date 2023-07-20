@@ -34,7 +34,7 @@ export async function displayCurrentTab() {
 		headerText[0],
 		headerText.charAt(0).toUpperCase()
 	);
-	header.textContent = formatHeaderText;
+	header.textContent = new URL(url).hostname;
 
 	if (currentActiveTab !== undefined) {
 		const { data } = formatMetricData({
