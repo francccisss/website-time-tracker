@@ -1,6 +1,6 @@
 export async function getCurrentActiveTab(url) {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
-	if (trackedSites.length !== 0) {
+	if (trackedSites.length == 0) {
 		return undefined;
 	}
 	const currentActiveTab = trackedSites.find((site) =>
@@ -82,10 +82,15 @@ export async function setCurrentTabToTracked(currentActiveTab) {
 				currentTrackedTime: currentTime,
 			},
 		};
+		const setUpdatedTab = trackedSites.map((site) => {
+			if (site.url.includes(currentActiveTab.url)) {
+				return updateCurrentTab;
+			}
+			return site;
+		});
+		console.dir(setUpdatedTab);
 		await chrome.storage.local.set({
-			trackedSites: trackedSites.map((site) => {
-				site.url.includes(currentActiveTab.url) ? updateCurrentTab : site;
-			}),
+			trackedSites: setUpdatedTab,
 		});
 	} else {
 		const createCurrentTabData = {
