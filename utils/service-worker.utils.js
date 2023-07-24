@@ -1,5 +1,8 @@
 export async function getCurrentActiveTab(url) {
 	const { trackedSites } = await chrome.storage.local.get(["trackedSites"]);
+	if (trackedSites.length !== 0) {
+		return undefined;
+	}
 	const currentActiveTab = trackedSites.find((site) =>
 		site.url.includes(new URL(url).hostname)
 	);
